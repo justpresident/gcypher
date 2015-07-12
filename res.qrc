@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>clear_left.png</file>
+    </qresource>
+</RCC>
