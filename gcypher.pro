@@ -24,7 +24,7 @@ HEADERS  += rijndael.h \
 
 FORMS    += mainwindow.ui
 
-CONFIG += mobility
+CONFIG += mobility c++11
 MOBILITY = 
 
 RESOURCES += \

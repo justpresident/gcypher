@@ -11,12 +11,6 @@ MainWindow::MainWindow(QWidget *parent) :
     createMenu();
     ui->verticalLayout->setMenuBar(menuBar);
 
-    ui->horizontalBtnLayout->addWidget(ui->saveButton);
-    ui->horizontalBtnLayout->addWidget(ui->deleteButton);
-
-    ui->horizontalNameEditLayout->addWidget(ui->nameEdit);
-    ui->horizontalNameEditLayout->addWidget(ui->clearButton);
-
     listModel = new QStringListModel(this);
     ui->listView->setModel(listModel);
 
@@ -24,6 +18,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&store, SIGNAL(changed(const Store &)), this, SLOT(save_file(const Store &)));
 
     statusBar()->showMessage("New file");
+
+    set_window_size();
+    connect(qApp->desktop(), SIGNAL(workAreaResized(int)), this, SLOT(set_window_size()));
 }
 
 MainWindow::~MainWindow()
@@ -32,6 +29,15 @@ MainWindow::~MainWindow()
     delete listModel;
     if (cypher != NULL)
         delete cypher;
+}
+
+void MainWindow::set_window_size() {
+    QString sys_type = QSysInfo::productType();
+    QStringList mobiles({"android", "blackberry", "ios", "winphone"});
+
+    if (mobiles.contains(sys_type)) {
+        resize(qApp->desktop()->availableGeometry(this).size());
+    }
 }
 
 void MainWindow::createMenu()
@@ -152,9 +158,4 @@ void MainWindow::on_listView_clicked(const QModelIndex &index)
 void MainWindow::on_nameEdit_textChanged(const QString &arg1 __attribute__((unused)))
 {
     refresh_data(store);
-}
-
-void MainWindow::on_clearButton_clicked()
-{
-    ui->nameEdit->setText("");
 }

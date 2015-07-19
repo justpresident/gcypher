@@ -102,6 +102,7 @@ public:
 
         // write data from byteArray to file
         file.write(encryptedArray);
+        file.flush();
         file.close();
     }
 

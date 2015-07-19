@@ -11,6 +11,9 @@
 #include <QStringListModel>
 #include <QAbstractItemView>
 
+#include <QSysInfo>
+#include <QDesktopWidget>
+
 #include <cypher.h>
 #include <store.h>
 
@@ -30,6 +33,7 @@ public:
     ~MainWindow();
 
 public slots:
+    void set_window_size();
     void refresh_data(const Store &store);
     void open_file();
     void save_file();
@@ -44,8 +48,6 @@ private slots:
     void on_listView_clicked(const QModelIndex &index);
 
     void on_nameEdit_textChanged(const QString &arg1);
-
-    void on_clearButton_clicked();
 
 private:
     Ui::MainWindow *ui;
