@@ -3,6 +3,7 @@
 
 #include <rijndael.h>
 #include <string.h>
+#include <store.h>
 
 #include <QMap>
 #include <QFileInfo>
@@ -45,9 +46,8 @@ public:
         rijndael_setup(&crypt_state.ctx, key_len, key);
     }
 
-    QMap<QString,QString> read_data() {
+    void read_data(Store &store) {
         QFileInfo fi(file_name);
-        QMap<QString,QString> data;
         if (fi.exists() && fi.size() > 0) {
             QFile file(file_name);
             file.open(QIODevice::ReadOnly);
@@ -69,19 +69,18 @@ public:
             //deserialize data from byteArray
             QDataStream in(decryptedArray);
             in.setVersion(QDataStream::Qt_5_4);
-            in >> data;
+            in >> store;
 
         }
-        return data;
     }
 
-    void write_data(const QMap<QString,QString> data) {
+    void write_data(const Store &store) {
         QByteArray byteArray;
         QDataStream out(&byteArray, QIODevice::ReadWrite);
         out.setVersion(QDataStream::Qt_5_4);
 
         // serialize data to byteArray
-        out << data;
+        out << store;
         out.setDevice(0);
 
         // write padding

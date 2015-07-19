@@ -9,7 +9,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     createMenu();
-    ui->verticalLayout->setMenuBar(menuBar);
 
     listModel = new QStringListModel(this);
     ui->listView->setModel(listModel);
@@ -53,6 +52,8 @@ void MainWindow::createMenu()
     connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
     connect(openAction, SIGNAL(triggered()), this, SLOT(open_file()));
     connect(saveAction, SIGNAL(triggered()), this, SLOT(save_file()));
+
+    ui->verticalLayout->setMenuBar(menuBar);
 }
 
 QString choose_file(QFileDialog::FileMode mode) {
@@ -95,14 +96,13 @@ Cypher * mk_file_cypher(QFileDialog::FileMode mode) {
 void MainWindow::open_file() {
     cypher = mk_file_cypher(QFileDialog::ExistingFile);
     if (cypher != NULL) {
-        QMap<QString, QString> dmap = cypher->read_data();
-        if (dmap.empty()) {
+        cypher->read_data(store);
+        if (store.get_data().empty()) {
             statusBar()->showMessage("Error: wrong key or empty file");
             cypher = NULL;
             return;
         }
-        store.set_data(dmap);
-        refresh_data(store);
+        refresh_data(store, true);
         set_file_name("Loaded");
     }
 }
@@ -121,13 +121,18 @@ void MainWindow::save_file(const Store &store) {
         cypher = mk_file_cypher(QFileDialog::AnyFile);
 
     if (cypher != NULL) {
-        cypher->write_data(store.get_data());
+        cypher->write_data(store);
         set_file_name("Saved");
     }
 }
 
-void MainWindow::refresh_data(const Store &store) {
+void MainWindow::refresh_data(const Store &store, bool reset_name_edit = false) {
     listModel->setStringList(store.get_keys().filter(ui->nameEdit->text()));
+
+    if (reset_name_edit) {
+        ui->nameEdit->setText("");
+    }
+
     QString value = "";
     if (listModel->stringList().contains(ui->nameEdit->text())) {
         value = store.get(ui->nameEdit->text());

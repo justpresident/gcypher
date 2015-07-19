@@ -34,7 +34,7 @@ public:
 
 public slots:
     void set_window_size();
-    void refresh_data(const Store &store);
+    void refresh_data(const Store &store, bool reset_name_edit);
     void open_file();
     void save_file();
     void save_file(const Store &store);
