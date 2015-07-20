@@ -97,12 +97,12 @@ void MainWindow::open_file() {
     cypher = mk_file_cypher(QFileDialog::ExistingFile);
     if (cypher != NULL) {
         cypher->read_data(store);
+        refresh_data(store, true);
         if (store.get_data().empty()) {
             statusBar()->showMessage("Error: wrong key or empty file");
             cypher = NULL;
             return;
         }
-        refresh_data(store, true);
         set_file_name("Loaded");
     }
 }

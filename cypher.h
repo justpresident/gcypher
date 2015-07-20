@@ -56,7 +56,7 @@ public:
             file.close();
 
             //remove padding length
-            char pad_length = byteArray.at(0);
+            quint8 pad_length = byteArray.at(0);
             byteArray.remove(0, 1);
 
             //decrypt byteArray
@@ -70,7 +70,6 @@ public:
             QDataStream in(decryptedArray);
             in.setVersion(QDataStream::Qt_5_4);
             in >> store;
-
         }
     }
 
@@ -84,7 +83,7 @@ public:
         out.setDevice(0);
 
         // write padding
-        char pad_length = RIJNDAEL_BLOCKSIZE - (byteArray.length() % RIJNDAEL_BLOCKSIZE);
+        quint8 pad_length = RIJNDAEL_BLOCKSIZE - (byteArray.length() % RIJNDAEL_BLOCKSIZE);
         if (pad_length == RIJNDAEL_BLOCKSIZE)
             pad_length = 0;
         for (qint8 i = 0; i < pad_length; ++i)
@@ -97,7 +96,9 @@ public:
         QFile file(file_name);
         file.open(QIODevice::WriteOnly);
         // write padding length to file
-        file.write(&pad_length, 1);
+        out.setDevice(&file);
+        out << pad_length;
+        out.setDevice(0);
 
         // write data from byteArray to file
         file.write(encryptedArray);

@@ -49,17 +49,17 @@ signals:
 };
 
 inline QDataStream &operator << (QDataStream &out, const Store &store) {
-    qint32 elements = store.data.count();
+    quint32 elements = store.data.count();
     out << elements;
     for (auto p = store.data.cbegin(); p != store.data.cend(); ++p) {
         QByteArray str;
         str = p.key().toUtf8();
-        qint16 klen = str.length();
+        quint16 klen = str.length();
         out << klen;
         out.writeRawData(str.constData(), klen);
 
         str = p.value().toUtf8();
-        qint32 vlen = str.length();
+        quint32 vlen = str.length();
         out << vlen;
         out.writeRawData(str.constData(), vlen);
     }
@@ -69,16 +69,16 @@ inline QDataStream &operator << (QDataStream &out, const Store &store) {
 inline QDataStream &operator >> (QDataStream &in, Store &store) {
     store.data.clear();
 
-    qint32 elements;
+    quint32 elements;
     in >> elements;
-    for (int i = 0; i < elements; ++i) {
-        qint16 klen;
+    for (quint32 i = 0; i < elements; ++i) {
+        quint16 klen;
         in >> klen;
         char key[klen + 1];
         in.readRawData(key, klen);
         key[klen] = 0;
 
-        qint32 vlen;
+        quint32 vlen;
         in >> vlen;
         char val[vlen + 1];
         in.readRawData(val, vlen);
