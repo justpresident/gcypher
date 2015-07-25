@@ -10,6 +10,7 @@
 #include <QFile>
 #include <QDataStream>
 #include <QByteArray>
+#include <QtEndian>
 
 typedef struct cryptstate {
   RIJNDAEL_context ctx;
@@ -17,25 +18,24 @@ typedef struct cryptstate {
   int mode;
 } Crypt__Rijndael;
 
+#define DEF_CYPHER_VERSION 2
+
+#define ERR_CYPHER_BAD_FORMAT 1
+#define ERR_CYPHER_EMPTY_FILE 2
+
 class Cypher {
 public:
-    Cypher(const QString file_name, QString key)
+    Cypher(const QString file_name, const char* key)
         :file_name(file_name)
     {
-        while(key.length() < 32) {
-            key.append("~");
+        UINT8 key_buffer[RIJNDAEL_KEYSIZE];
+        memset(key_buffer,0, RIJNDAEL_KEYSIZE);
+        memccpy(key_buffer, key, 0, strlen(key));
+        for(quint8 i = strlen(key); i < RIJNDAEL_KEYSIZE; ++i) {
+            key_buffer[i] = '~';
         }
 
-        UINT8 key_buffer[128];
-        size_t key_len = 0;
-        memset(key_buffer, 0, 128);
-        key = key.left(128);
-        for (int i = 0; i < key.length(); ++i) {
-            key_buffer[i] = key.at(i).toLatin1();
-            key_len++;
-        }
-
-        crypt_setup(key_buffer, key_len);
+        crypt_setup(key_buffer, RIJNDAEL_KEYSIZE);
     }
     ~Cypher() {};
 
@@ -46,31 +46,42 @@ public:
         rijndael_setup(&crypt_state.ctx, key_len, key);
     }
 
-    void read_data(Store &store) {
+    quint8 read_data(Store &store) {
         QFileInfo fi(file_name);
-        if (fi.exists() && fi.size() > 0) {
-            QFile file(file_name);
-            file.open(QIODevice::ReadOnly);
-            // read data from file to byteArray
-            QByteArray byteArray = file.readAll();
-            file.close();
+        if (!fi.exists() || fi.size() == 0)
+            return ERR_CYPHER_EMPTY_FILE;
 
-            //remove padding length
-            quint8 pad_length = byteArray.at(0);
-            byteArray.remove(0, 1);
+        QFile file(file_name);
+        file.open(QIODevice::ReadOnly);
+        // read data from file to byteArray
 
-            //decrypt byteArray
-            QByteArray decryptedArray(byteArray.length(), 0);
-            block_decrypt(&crypt_state.ctx, (UINT8 *)byteArray.data(), byteArray.length(), (UINT8 *)decryptedArray.data(), crypt_state.iv);
+        quint16 cypher_version;
+        file.read((char *)&cypher_version, sizeof(cypher_version));
+        cypher_version = qToBigEndian(cypher_version);
 
-            //remove padding
-            decryptedArray.remove(decryptedArray.length()-pad_length, pad_length);
+        if (cypher_version != DEF_CYPHER_VERSION)
+            return ERR_CYPHER_BAD_FORMAT;
 
-            //deserialize data from byteArray
-            QDataStream in(decryptedArray);
-            in.setVersion(QDataStream::Qt_5_4);
-            in >> store;
-        }
+        QByteArray byteArray = file.readAll();
+        file.close();
+
+        //remove padding length
+        quint8 pad_length = byteArray.at(0);
+        byteArray.remove(0, 1);
+
+        //decrypt byteArray
+        QByteArray decryptedArray(byteArray.length(), 0);
+        block_decrypt(&crypt_state.ctx, (UINT8 *)byteArray.data(), byteArray.length(), (UINT8 *)decryptedArray.data(), crypt_state.iv);
+
+        //remove padding
+        decryptedArray.remove(decryptedArray.length()-pad_length, pad_length);
+
+        //deserialize data from byteArray
+        QDataStream in(decryptedArray);
+        in.setVersion(QDataStream::Qt_5_4);
+        in >> store;
+
+        return 0;
     }
 
     void write_data(const Store &store) {
@@ -93,10 +104,15 @@ public:
         QByteArray encryptedArray(byteArray.length(), 0);
         block_encrypt(&crypt_state.ctx, (UINT8 *)byteArray.data(), byteArray.length(), (UINT8 *)encryptedArray.data(), crypt_state.iv);
 
+        // open file
         QFile file(file_name);
         file.open(QIODevice::WriteOnly);
-        // write padding length to file
         out.setDevice(&file);
+
+        //write version
+        out << (quint16)(DEF_CYPHER_VERSION);
+
+        // write padding length to file
         out << pad_length;
         out.setDevice(0);
 

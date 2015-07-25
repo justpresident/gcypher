@@ -5,6 +5,8 @@
 #include <QString>
 #include <QStringList>
 
+#define DEF_STORE_VERSION 3
+
 class Store: public QObject {
     Q_OBJECT
 
@@ -49,6 +51,7 @@ signals:
 };
 
 inline QDataStream &operator << (QDataStream &out, const Store &store) {
+    out << (qint16)(DEF_STORE_VERSION);
     quint32 elements = store.data.count();
     out << elements;
     for (auto p = store.data.cbegin(); p != store.data.cend(); ++p) {
@@ -69,22 +72,27 @@ inline QDataStream &operator << (QDataStream &out, const Store &store) {
 inline QDataStream &operator >> (QDataStream &in, Store &store) {
     store.data.clear();
 
-    quint32 elements;
-    in >> elements;
-    for (quint32 i = 0; i < elements; ++i) {
-        quint16 klen;
-        in >> klen;
-        char key[klen + 1];
-        in.readRawData(key, klen);
-        key[klen] = 0;
+    qint16 store_version;
+    in >> store_version;
 
-        quint32 vlen;
-        in >> vlen;
-        char val[vlen + 1];
-        in.readRawData(val, vlen);
-        val[vlen] = 0;
+    if (store_version == DEF_STORE_VERSION) {
+        quint32 elements;
+        in >> elements;
+        for (quint32 i = 0; i < elements; ++i) {
+            quint16 klen;
+            in >> klen;
+            char key[klen + 1];
+            in.readRawData(key, klen);
+            key[klen] = 0;
 
-        store.put(QString::fromUtf8(key), QString::fromUtf8(val));
+            quint32 vlen;
+            in >> vlen;
+            char val[vlen + 1];
+            in.readRawData(val, vlen);
+            val[vlen] = 0;
+
+            store.put(QString::fromUtf8(key), QString::fromUtf8(val));
+        }
     }
     return in;
 }

@@ -88,7 +88,7 @@ Cypher * mk_file_cypher(QFileDialog::FileMode mode) {
     if (key == "")
         return NULL;
 
-    cypher = new Cypher(data_file, key);
+    cypher = new Cypher(data_file, key.toUtf8().constData());
 
     return cypher;
 }
@@ -96,7 +96,21 @@ Cypher * mk_file_cypher(QFileDialog::FileMode mode) {
 void MainWindow::open_file() {
     cypher = mk_file_cypher(QFileDialog::ExistingFile);
     if (cypher != NULL) {
-        cypher->read_data(store);
+        qint8 result = cypher->read_data(store);
+        if (result) {
+            QString err = "Unknown";
+            switch(result) {
+            case ERR_CYPHER_BAD_FORMAT:
+                err = "Bad file format";
+                break;
+            case ERR_CYPHER_EMPTY_FILE:
+                err = "Empty file";
+                break;
+            }
+            statusBar()->showMessage("Error: "+ err);
+            cypher = NULL;
+            return;
+        }
         refresh_data(store, true);
         if (store.get_data().empty()) {
             statusBar()->showMessage("Error: wrong key or empty file");
