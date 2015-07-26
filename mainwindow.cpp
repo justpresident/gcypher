@@ -141,15 +141,19 @@ void MainWindow::save_file(const Store &store) {
 }
 
 void MainWindow::refresh_data(const Store &store, bool reset_name_edit = false) {
-    listModel->setStringList(store.get_keys().filter(ui->nameEdit->text()));
+    QString key = ui->nameEdit->text();
+    listModel->setStringList(store.get_keys().filter(key));
 
     if (reset_name_edit) {
         ui->nameEdit->setText("");
     }
 
     QString value = "";
-    if (listModel->stringList().contains(ui->nameEdit->text())) {
+    if (listModel->stringList().contains(key)) {
         value = store.get(ui->nameEdit->text());
+
+        QModelIndex keyIndex = listModel->index(listModel->stringList().indexOf(key), 0);
+        ui->listView->setCurrentIndex(keyIndex);
     }
     ui->valueEdit->document()->setPlainText(value);
 }
@@ -161,7 +165,14 @@ void MainWindow::on_saveButton_clicked()
 
 void MainWindow::on_deleteButton_clicked()
 {
-    QString selected_key = listModel->stringList().at(ui->listView->currentIndex().row());
+    int row = ui->listView->currentIndex().row();
+
+    if (row < 0) {
+        statusBar()->showMessage("No key selected");
+        return;
+    }
+
+    QString selected_key = listModel->stringList().at(row);
     store.remove(selected_key);
     ui->nameEdit->setText("");
     ui->valueEdit->document()->setPlainText("");
