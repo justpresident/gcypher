@@ -5,7 +5,6 @@
 #include <string.h>
 #include <store.h>
 
-#include <QMap>
 #include <QFileInfo>
 #include <QFile>
 #include <QDataStream>

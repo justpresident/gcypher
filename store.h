@@ -7,14 +7,16 @@
 
 #define DEF_STORE_VERSION 3
 
+typedef QMap<QString,QString> TKeyValue;
+
 class Store: public QObject {
     Q_OBJECT
 
 public:
     explicit Store(){}
     ~Store() {};
-    friend QDataStream &operator << (QDataStream &out, const Store &store);
-    friend QDataStream &operator >> (QDataStream &in, Store &store);
+    friend QDataStream & operator << (QDataStream &out, const Store &store);
+    friend QDataStream & operator >> (QDataStream &in, Store &store);
 
 public slots:
     void put(QString key, QString value) {
@@ -35,16 +37,16 @@ public slots:
         return data.keys();
     }
 
-    const QMap<QString,QString> get_data() const {
+    const TKeyValue get_data() const {
         return data;
     }
-    void set_data(const QMap<QString,QString> dt) {
+    void set_data(const TKeyValue dt) {
         data = dt;
         //emit changed(*this);
     }
 
 private:
-    QMap<QString,QString> data;
+    TKeyValue data;
 
 signals:
     void changed(const Store &store);

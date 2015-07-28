@@ -3,13 +3,14 @@
 
 #include <QMainWindow>
 #include <QMenuBar>
+#include <QLabel>
 #include <QFileDialog>
+#include <QMessageBox>
 #include <QInputDialog>
 #include <QStatusBar>
 
 #include <QStringList>
 #include <QStringListModel>
-#include <QAbstractItemView>
 
 #include <QSysInfo>
 #include <QDesktopWidget>
@@ -34,11 +35,15 @@ public:
 
 public slots:
     void set_window_size();
-    void refresh_data(const Store &store, bool reset_name_edit);
+    void refresh_data(const Store &store);
     void open_file();
-    void save_file();
-    void save_file(const Store &store);
-    void set_file_name(const QString action);
+    bool save_file();
+    bool save_file(const Store &store);
+    void update_file_name(const QString action);
+
+    bool maybe_save();
+protected:
+    void closeEvent(QCloseEvent *event);
 
 private slots:
     void on_saveButton_clicked();
@@ -54,10 +59,13 @@ private:
     Cypher *cypher = NULL;
     Store store;
     void createMenu();
+    void createStatusBar();
 
     QMenuBar *menuBar;
     QMenu *fileMenu;
     QAction *exitAction, *openAction, *saveAction;
+
+    QLabel *rowsLabel;
 
     QStringListModel *listModel;
 };
