@@ -66,13 +66,13 @@ void MainWindow::createMenu()
     ui->verticalLayout->setMenuBar(menuBar);
 }
 
-QString choose_file(QFileDialog::FileMode mode) {
+QString MainWindow::choose_file(const QFileDialog::FileMode mode) {
     QString file_name;
 
     if (mode == QFileDialog::ExistingFile) {
-        file_name = QFileDialog::getOpenFileName();
+        file_name = QFileDialog::getOpenFileName(this);
     } else {
-        file_name = QFileDialog::getSaveFileName();
+        file_name = QFileDialog::getSaveFileName(this);
     }
 
     return file_name;
@@ -87,7 +87,7 @@ QString input_password() {
         return "";
 }
 
-Cypher * mk_file_cypher(QFileDialog::FileMode mode) {
+Cypher * MainWindow::mk_file_cypher(QFileDialog::FileMode mode) {
     QString data_file = choose_file(mode);
     Cypher *cypher = NULL;
 

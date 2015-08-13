@@ -9,6 +9,7 @@
 #include <QInputDialog>
 #include <QStatusBar>
 
+#include <QString>
 #include <QStringList>
 #include <QStringListModel>
 
@@ -36,6 +37,7 @@ public:
 public slots:
     void set_window_size();
     void refresh_data(const Store &store);
+    QString choose_file(const QFileDialog::FileMode mode);
     void open_file();
     bool save_file();
     bool save_file(const Store &store);
@@ -60,6 +62,7 @@ private:
     Store store;
     void createMenu();
     void createStatusBar();
+    Cypher * mk_file_cypher(QFileDialog::FileMode mode);
 
     QMenuBar *menuBar;
     QMenu *fileMenu;

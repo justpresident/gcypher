@@ -1,9 +1,11 @@
 #ifndef STORE_H
 #define STORE_H
 
+#include <QObject>
 #include <QMap>
 #include <QString>
 #include <QStringList>
+#include <QDataStream>
 
 #define DEF_STORE_VERSION 3
 
