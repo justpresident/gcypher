@@ -203,7 +203,7 @@ void MainWindow::refresh_data(const Store &store) {
 void MainWindow::on_saveButton_clicked()
 {
     if (!ui->nameEdit->text().isEmpty())
-        store.put(ui->nameEdit->text(),ui->valueEdit->document()->toPlainText());
+        store.put(ui->nameEdit->text(), ui->valueEdit->document()->toPlainText(), QDateTime::currentMSecsSinceEpoch() / 1000);
 }
 
 void MainWindow::on_deleteButton_clicked()

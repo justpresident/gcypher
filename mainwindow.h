@@ -15,6 +15,7 @@
 
 #include <QSysInfo>
 #include <QDesktopWidget>
+#include <QDateTime>
 
 #include <cypher.h>
 #include <store.h>

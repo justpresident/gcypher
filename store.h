@@ -3,13 +3,19 @@
 
 #include <QObject>
 #include <QMap>
+#include <QVector>
+#include <QPair>
 #include <QString>
 #include <QStringList>
 #include <QDataStream>
 
-#define DEF_STORE_VERSION 3
+#define STORE_VER_3 3
+#define STORE_VER_4 4
+#define DEF_STORE_VERSION STORE_VER_4
 
-typedef QMap<QString,QString> TKeyValue;
+typedef QPair<QString, quint32> TValuePair;
+typedef QVector<TValuePair> TValuesArray;
+typedef QMap<QString,TValuesArray> TKeyValue;
 
 class Store: public QObject {
     Q_OBJECT
@@ -21,13 +27,19 @@ public:
     friend QDataStream & operator >> (QDataStream &in, Store &store);
 
 public slots:
-    void put(QString key, QString value) {
-        data.insert(key, value);
-        emit changed(*this);
+    void put(const QString key, const QString val, const quint32 ts = 0, bool emit_change = 1) {
+        TValuePair pair = {val, ts};
+        if (data.contains(key)) {
+            data[key].append(pair);
+        } else {
+            data.insert(key, {pair});
+        }
+        if (emit_change)
+            emit changed(*this);
     }
 
     QString get(QString key) const {
-        return data.value(key);
+        return data.value(key).at(0).first; // FIXME !! sort by timestamp
     }
 
     void remove(QString key) {
@@ -59,16 +71,24 @@ inline QDataStream &operator << (QDataStream &out, const Store &store) {
     quint32 elements = store.data.count();
     out << elements;
     for (auto p = store.data.cbegin(); p != store.data.cend(); ++p) {
-        QByteArray str;
-        str = p.key().toUtf8();
-        quint16 klen = str.length();
-        out << klen;
-        out.writeRawData(str.constData(), klen);
+        QByteArray str; // buffer for both key and value
 
-        str = p.value().toUtf8();
-        quint32 vlen = str.length();
-        out << vlen;
-        out.writeRawData(str.constData(), vlen);
+        const TValuesArray valarr = p.value();
+        for (const auto val_pair: valarr) {
+            str = p.key().toUtf8();
+            quint16 klen = str.length();
+            out << klen;
+            out.writeRawData(str.constData(), klen);
+
+            str = val_pair.first.toUtf8();
+            quint32 vlen = str.length();
+            out << vlen;
+            out.writeRawData(str.constData(), vlen);
+
+            if (DEF_STORE_VERSION == STORE_VER_4) {
+                out << val_pair.second;
+            }
+        }
     }
     return out;
 }
@@ -79,7 +99,7 @@ inline QDataStream &operator >> (QDataStream &in, Store &store) {
     qint16 store_version;
     in >> store_version;
 
-    if (store_version == DEF_STORE_VERSION) {
+    if (store_version == STORE_VER_3 || store_version == STORE_VER_4) {
         quint32 elements;
         in >> elements;
         for (quint32 i = 0; i < elements; ++i) {
@@ -95,7 +115,12 @@ inline QDataStream &operator >> (QDataStream &in, Store &store) {
             in.readRawData(val, vlen);
             val[vlen] = 0;
 
-            store.put(QString::fromUtf8(key), QString::fromUtf8(val));
+            quint32 ts = 0;
+            if (store_version == STORE_VER_4) {
+                in >> ts;
+            }
+
+            store.put(QString::fromUtf8(key), QString::fromUtf8(val), ts, 0);
         }
     }
     return in;
