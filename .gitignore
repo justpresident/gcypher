@@ -1,1 +1,4 @@
 builds
+*.o
+android-build
+.qmake.stash
