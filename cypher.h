@@ -1,5 +1,4 @@
-#ifndef CYPHER_H
-#define CYPHER_H
+#pragma once
 
 #include <string.h>
 
@@ -34,6 +33,4 @@ private:
     cryptstate cryptState_;
     QString fileName_;
 };
-
-#endif // CYPHER_H
 

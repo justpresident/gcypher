@@ -16,7 +16,8 @@ SOURCES += \
     cypher.cpp \
         main.cpp \
         mainwindow.cpp \
-    rijndael.cpp
+    rijndael.cpp \
+    store.cpp
 
 QMAKE_CXXFLAGS += -std=c++20 -Wcast-align -Wunused -Wshadow -Wpointer-arith -Wcast-qual -Wno-missing-braces -Wsuggest-override -Werror=suggest-override
 

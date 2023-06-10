@@ -1,5 +1,4 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include <QMainWindow>
 #include <QMenuBar>
@@ -34,10 +33,10 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    QString choose_file(const QFileDialog::FileMode mode);
 
 public slots:
     void refresh_data(const Store &store);
-    QString choose_file(const QFileDialog::FileMode mode);
     void open_file();
     bool save_file();
     bool save_file(const Store &store);
@@ -72,5 +71,3 @@ private:
 
     QStringListModel *keyList_;
 };
-
-#endif // MAINWINDOW_H
