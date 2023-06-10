@@ -15,10 +15,6 @@
 
 #include <QSysInfo>
 
-#ifndef Q_OS_ANDROID
-#include <QDesktopWidget>
-#endif
-
 #include <QDateTime>
 
 #include <cypher.h>
@@ -40,7 +36,6 @@ public:
     ~MainWindow();
 
 public slots:
-//    void set_window_size();
     void refresh_data(const Store &store);
     QString choose_file(const QFileDialog::FileMode mode);
     void open_file();
