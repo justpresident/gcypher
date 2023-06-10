@@ -86,7 +86,7 @@ inline QDataStream &operator << (QDataStream &out, const Store &store) {
             out.writeRawData(str.constData(), vlen);
 
             if (DEF_STORE_VERSION == STORE_VER_4) {
-                out << val_pair.second;
+                out << quint32(val_pair.second);
             }
         }
     }
