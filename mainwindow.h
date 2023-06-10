@@ -17,8 +17,8 @@
 
 #include <QDateTime>
 
-#include <cypher.h>
-#include <store.h>
+#include "cypher.h"
+#include "store.h"
 
 class QMenu;
 class QMenuBar;

@@ -13,6 +13,7 @@ TEMPLATE = app
 
 
 SOURCES += \
+    cypher.cpp \
         main.cpp \
         mainwindow.cpp \
     rijndael.cpp
