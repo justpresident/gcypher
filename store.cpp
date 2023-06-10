@@ -14,7 +14,9 @@ void Store::put(const QString key, const QString val, const quint32 ts, bool emi
 }
 
 QString Store::get(QString key) const {
-    return data_.value(key).at(0).first; // FIXME !! sort by timestamp
+    TValuesArray values = data_.value(key);
+    std::sort(values.begin(), values.end(), [](const auto& a, const auto& b) {return a.second > b.second;});
+    return values.at(0).first;
 }
 
 void Store::remove(QString key) {
@@ -32,25 +34,26 @@ const TKeyValue Store::get_data() const {
 
 QDataStream &operator << (QDataStream &out, const Store &store) {
     out << (qint16)(DEF_STORE_VERSION);
-    quint32 elements = store.data_.count();
-    out << elements;
+    quint32 elementsCount = 0;
     for (auto p = store.data_.cbegin(); p != store.data_.cend(); ++p) {
-        QByteArray str; // buffer for both key and value
-
-        const TValuesArray valarr = p.value();
-        for (const auto& val_pair: valarr) {
+        elementsCount += p.value().size();
+    }
+    out << elementsCount;
+    for (auto p = store.data_.cbegin(); p != store.data_.cend(); ++p) {
+        for (const auto& [val, ts]: p.value()) {
+            QByteArray str; // buffer for both key and value
             str = p.key().toUtf8();
             quint16 klen = str.length();
             out << klen;
             out.writeRawData(str.constData(), klen);
 
-            str = val_pair.first.toUtf8();
+            str = val.toUtf8();
             quint32 vlen = str.length();
             out << vlen;
             out.writeRawData(str.constData(), vlen);
 
             if (DEF_STORE_VERSION == STORE_VER_4) {
-                out << quint32(val_pair.second);
+                out << quint32(ts);
             }
         }
     }
@@ -87,5 +90,10 @@ QDataStream &operator >> (QDataStream &in, Store &store) {
             store.put(QString::fromUtf8(key), QString::fromUtf8(val), ts, 0);
         }
     }
+
+    if (!in.atEnd()) {
+        throw std::runtime_error("File is corrupt");
+    }
+
     return in;
 }

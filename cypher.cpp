@@ -59,14 +59,18 @@ quint8 Cypher::read_data(Store &store) {
     //deserialize data from byteArray
     QDataStream in(decryptedArray);
     in.setVersion(QDataStream::Qt_5_4);
-    in >> store;
+    try {
+        in >> store;
+    } catch(const std::exception& ex) {
+        return ERR_CYPHER_BAD_FORMAT;
+    }
 
     return 0;
 }
 
 void Cypher::write_data(const Store &store) {
     QByteArray byteArray;
-    QDataStream out(&byteArray, QIODevice::ReadWrite);
+    QDataStream out(&byteArray, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_4);
 
     // serialize data to byteArray
@@ -87,14 +91,14 @@ void Cypher::write_data(const Store &store) {
     // open file
     QFile file(fileName_);
     file.open(QIODevice::WriteOnly);
-    out.setDevice(&file);
+    QDataStream fileOut(&file);
 
     //write version
-    out << (quint16)(DEF_CYPHER_VERSION);
+    fileOut << (quint16)(DEF_CYPHER_VERSION);
 
     // write padding length to file
-    out << pad_length;
-    out.setDevice(0);
+    fileOut << pad_length;
+    fileOut.setDevice(0);
 
     // write data from byteArray to file
     file.write(encryptedArray);

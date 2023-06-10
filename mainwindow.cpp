@@ -190,8 +190,12 @@ void MainWindow::refresh_data(const Store &store) {
 
 void MainWindow::on_saveButton_clicked()
 {
-    if (!ui_->nameEdit->text().isEmpty())
-        store_.put(ui_->nameEdit->text(), ui_->valueEdit->document()->toPlainText(), QDateTime::currentMSecsSinceEpoch() / 1000);
+    if (!ui_->nameEdit->text().isEmpty()) {
+        QString key = ui_->nameEdit->text();
+        QString val = ui_->valueEdit->document()->toPlainText();
+        qint32 ts = QDateTime::currentMSecsSinceEpoch() / 1000;
+        store_.put(key, val, ts);
+    }
 }
 
 void MainWindow::on_deleteButton_clicked()
