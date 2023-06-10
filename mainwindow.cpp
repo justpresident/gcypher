@@ -17,8 +17,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&store, SIGNAL(changed(const Store &)), this, SLOT(refresh_data(const Store &)));
     connect(&store, SIGNAL(changed(const Store &)), this, SLOT(save_file(const Store &)));
 
-    set_window_size();
-    connect(qApp->desktop(), SIGNAL(workAreaResized(int)), this, SLOT(set_window_size()));
+//    set_window_size();
+//#ifndef Q_OS_ANDROID
+//    connect(qApp->desktop(), SIGNAL(workAreaResized(int)), this, SLOT(set_window_size()));
+//#else
+//    connect(qApp->primaryScreen(), SIGNAL(workAreaResized(int)), this, SLOT(set_window_size()));
+//#endif
 
     refresh_data(store);
 }
@@ -40,14 +44,18 @@ void MainWindow::createStatusBar() {
 
 }
 
-void MainWindow::set_window_size() {
-    QString sys_type = QSysInfo::productType();
-    QStringList mobiles({"android", "blackberry", "ios", "winphone"});
+//void MainWindow::set_window_size() {
+//    QString sys_type = QSysInfo::productType();
+//    QStringList mobiles({"android", "blackberry", "ios", "winphone"});
 
-    if (mobiles.contains(sys_type)) {
-        resize(qApp->desktop()->availableGeometry(this).size());
-    }
-}
+//    if (mobiles.contains(sys_type)) {
+//#ifndef Q_OS_ANDROID
+//        resize(qApp->desktop()->availableGeometry(this).size());
+//#else
+//        resize(qApp->primaryScreen()->availableGeometry().size());
+//#endif
+//    }
+//}
 
 void MainWindow::createMenu()
 {

@@ -74,7 +74,7 @@ inline QDataStream &operator << (QDataStream &out, const Store &store) {
         QByteArray str; // buffer for both key and value
 
         const TValuesArray valarr = p.value();
-        for (const auto val_pair: valarr) {
+        for (const auto& val_pair: valarr) {
             str = p.key().toUtf8();
             quint16 klen = str.length();
             out << klen;

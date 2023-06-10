@@ -1,4 +1,6 @@
 builds
+build*
 *.o
 android-build
 .qmake.stash
+pron
