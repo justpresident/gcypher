@@ -24,8 +24,8 @@ typedef struct cryptstate {
 
 class Cypher {
 public:
-    Cypher(const QString file_name, const char* key)
-        :file_name(file_name)
+    Cypher(const QString fileName, const char* key)
+        :fileName_(fileName)
     {
         UINT8 key_buffer[RIJNDAEL_KEYSIZE];
         memset(key_buffer,0, RIJNDAEL_KEYSIZE);
@@ -39,18 +39,18 @@ public:
     ~Cypher() {};
 
     void crypt_setup(const UINT8 *key, size_t key_len) {
-        crypt_state.ctx.mode = crypt_state.mode = MODE_CBC;
+        cryptState_.ctx.mode = cryptState_.mode = MODE_CBC;
 
-        memset(crypt_state.iv, 0, RIJNDAEL_BLOCKSIZE);
-        rijndael_setup(&crypt_state.ctx, key_len, key);
+        memset(cryptState_.iv, 0, RIJNDAEL_BLOCKSIZE);
+        rijndael_setup(&cryptState_.ctx, key_len, key);
     }
 
     quint8 read_data(Store &store) {
-        QFileInfo fi(file_name);
+        QFileInfo fi(fileName_);
         if (!fi.exists() || fi.size() == 0)
             return ERR_CYPHER_EMPTY_FILE;
 
-        QFile file(file_name);
+        QFile file(fileName_);
         file.open(QIODevice::ReadOnly);
         // read data from file to byteArray
 
@@ -70,7 +70,7 @@ public:
 
         //decrypt byteArray
         QByteArray decryptedArray(byteArray.length(), 0);
-        block_decrypt(&crypt_state.ctx, (UINT8 *)byteArray.data(), byteArray.length(), (UINT8 *)decryptedArray.data(), crypt_state.iv);
+        block_decrypt(&cryptState_.ctx, (UINT8 *)byteArray.data(), byteArray.length(), (UINT8 *)decryptedArray.data(), cryptState_.iv);
 
         //remove padding
         decryptedArray.remove(decryptedArray.length()-pad_length, pad_length);
@@ -101,10 +101,10 @@ public:
 
         // encrypt byteArray
         QByteArray encryptedArray(byteArray.length(), 0);
-        block_encrypt(&crypt_state.ctx, (UINT8 *)byteArray.data(), byteArray.length(), (UINT8 *)encryptedArray.data(), crypt_state.iv);
+        block_encrypt(&cryptState_.ctx, (UINT8 *)byteArray.data(), byteArray.length(), (UINT8 *)encryptedArray.data(), cryptState_.iv);
 
         // open file
-        QFile file(file_name);
+        QFile file(fileName_);
         file.open(QIODevice::WriteOnly);
         out.setDevice(&file);
 
@@ -122,12 +122,12 @@ public:
     }
 
     QString get_file_name() const {
-        return file_name;
+        return fileName_;
     }
 
 private:
-    cryptstate crypt_state;
-    QString file_name;
+    cryptstate cryptState_;
+    QString fileName_;
 };
 
 #endif // CYPHER_H

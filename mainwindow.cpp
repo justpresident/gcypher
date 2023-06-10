@@ -4,54 +4,54 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui_(new Ui::MainWindow)
 {
-    ui->setupUi(this);
+    ui_->setupUi(this);
 
     createMenu();
     createStatusBar();
 
-    listModel = new QStringListModel(this);
-    ui->listView->setModel(listModel);
+    keyList_ = new QStringListModel(this);
+    ui_->listView->setModel(keyList_);
 
-    connect(&store, SIGNAL(changed(const Store &)), this, SLOT(refresh_data(const Store &)));
-    connect(&store, SIGNAL(changed(const Store &)), this, SLOT(save_file(const Store &)));
+    connect(&store_, SIGNAL(changed(const Store &)), this, SLOT(refresh_data(const Store &)));
+    connect(&store_, SIGNAL(changed(const Store &)), this, SLOT(save_file(const Store &)));
 
-    refresh_data(store);
+    refresh_data(store_);
 }
 
 MainWindow::~MainWindow()
 {
-    delete ui;
-    delete listModel;
-    if (cypher != NULL)
-        delete cypher;
+    delete ui_;
+    delete keyList_;
+    if (cypher_ != NULL)
+        delete cypher_;
 }
 
 void MainWindow::createStatusBar() {
-    rowsLabel = new QLabel(this);
-    rowsLabel->setFrameShadow(QFrame::Raised);
+    rowsLabel_ = new QLabel(this);
+    rowsLabel_->setFrameShadow(QFrame::Raised);
 
-    statusBar()->addPermanentWidget(rowsLabel);
+    statusBar()->addPermanentWidget(rowsLabel_);
     statusBar()->showMessage("New file");
 
 }
 
 void MainWindow::createMenu()
 {
-    menuBar = new QMenuBar;
+    menuBar_ = new QMenuBar;
 
-    fileMenu = new QMenu(tr("&File"), this);
-    openAction = fileMenu->addAction(tr("&Open"));
-    saveAction = fileMenu->addAction(tr("&Save"));
-    exitAction = fileMenu->addAction(tr("E&xit"));
-    menuBar->addMenu(fileMenu);
+    fileMenu_ = new QMenu(tr("&File"), this);
+    openAction_ = fileMenu_->addAction(tr("&Open"));
+    saveAction_ = fileMenu_->addAction(tr("&Save"));
+    exitAction_ = fileMenu_->addAction(tr("E&xit"));
+    menuBar_->addMenu(fileMenu_);
 
-    connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
-    connect(openAction, SIGNAL(triggered()), this, SLOT(open_file()));
-    connect(saveAction, SIGNAL(triggered()), this, SLOT(save_file()));
+    connect(exitAction_, SIGNAL(triggered()), this, SLOT(close()));
+    connect(openAction_, SIGNAL(triggered()), this, SLOT(open_file()));
+    connect(saveAction_, SIGNAL(triggered()), this, SLOT(save_file()));
 
-    ui->verticalLayout->setMenuBar(menuBar);
+    ui_->verticalLayout->setMenuBar(menuBar_);
 }
 
 QString MainWindow::choose_file(const QFileDialog::FileMode mode) {
@@ -77,7 +77,7 @@ QString input_password() {
 
 Cypher * MainWindow::mk_file_cypher(QFileDialog::FileMode mode) {
     QString data_file = choose_file(mode);
-    Cypher *cypher = NULL;
+    Cypher *result = NULL;
 
     if (data_file == "")
         return NULL;
@@ -86,31 +86,31 @@ Cypher * MainWindow::mk_file_cypher(QFileDialog::FileMode mode) {
     if (key == "")
         return NULL;
 
-    cypher = new Cypher(data_file, key.toUtf8().constData());
+    result = new Cypher(data_file, key.toUtf8().constData());
 
-    return cypher;
+    return result;
 }
 
 void MainWindow::update_file_name(const QString action) {
-    QString message = action + " - " + cypher->get_file_name();
+    QString message = action + " - " + cypher_->get_file_name();
     QFontMetrics fm(statusBar()->font());
-    int availableLength = (statusBar()->size().width() - rowsLabel->size().width())/fm.averageCharWidth();
+    int availableLength = (statusBar()->size().width() - rowsLabel_->size().width())/fm.averageCharWidth();
     if (message.length() > availableLength) {
-        message = action + " - ..." + cypher->get_file_name().right(availableLength - action.length() - 6);
+        message = action + " - ..." + cypher_->get_file_name().right(availableLength - action.length() - 6);
     }
 
     statusBar()->showMessage(message, 1500);
 
-    QString window_title = "Cypher - " + cypher->get_file_name();
+    QString window_title = "Cypher - " + cypher_->get_file_name();
     if (window_title.length() > availableLength - 15)
-        window_title = "Cypher - ..." + cypher->get_file_name().right(availableLength - 20);
+        window_title = "Cypher - ..." + cypher_->get_file_name().right(availableLength - 20);
     setWindowTitle(window_title);
 }
 
 void MainWindow::open_file() {
-    cypher = mk_file_cypher(QFileDialog::ExistingFile);
-    if (cypher != NULL) {
-        qint8 result = cypher->read_data(store);
+    cypher_ = mk_file_cypher(QFileDialog::ExistingFile);
+    if (cypher_ != NULL) {
+        qint8 result = cypher_->read_data(store_);
         if (result) {
             QString err = "Unknown";
             switch(result) {
@@ -122,15 +122,15 @@ void MainWindow::open_file() {
                 break;
             }
             statusBar()->showMessage("Error: "+ err);
-            cypher = NULL;
+            cypher_ = NULL;
             return;
         }
 
-        ui->nameEdit->setText("");
-        refresh_data(store);
-        if (store.get_data().empty()) {
+        ui_->nameEdit->setText("");
+        refresh_data(store_);
+        if (store_.get_data().empty()) {
             statusBar()->showMessage("Error: wrong key or empty file");
-            cypher = NULL;
+            cypher_ = NULL;
             return;
         }
         update_file_name("Loaded");
@@ -138,7 +138,7 @@ void MainWindow::open_file() {
 }
 
 bool MainWindow::maybe_save() {
-    if (cypher != NULL || listModel->stringList().count() == 0)
+    if (cypher_ != NULL || keyList_->stringList().count() == 0)
         return true;
 
     QMessageBox::StandardButton ret = QMessageBox::warning(
@@ -156,15 +156,15 @@ bool MainWindow::maybe_save() {
 }
 
 bool MainWindow::save_file() {
-    return save_file(store);
+    return save_file(store_);
 }
 
 bool MainWindow::save_file(const Store &store) {
-    if (cypher == NULL)
-        cypher = mk_file_cypher(QFileDialog::AnyFile);
+    if (cypher_ == NULL)
+        cypher_ = mk_file_cypher(QFileDialog::AnyFile);
 
-    if (cypher != NULL) {
-        cypher->write_data(store);
+    if (cypher_ != NULL) {
+        cypher_->write_data(store);
         update_file_name("Saved");
 
         return true;
@@ -173,52 +173,52 @@ bool MainWindow::save_file(const Store &store) {
 }
 
 void MainWindow::refresh_data(const Store &store) {
-    QString key = ui->nameEdit->text();
-    listModel->setStringList(store.get_keys().filter(key));
+    QString key = ui_->nameEdit->text();
+    keyList_->setStringList(store.get_keys().filter(key));
 
     QString value = "";
-    if (listModel->stringList().contains(key)) {
-        value = store.get(ui->nameEdit->text());
+    if (keyList_->stringList().contains(key)) {
+        value = store.get(ui_->nameEdit->text());
 
-        QModelIndex keyIndex = listModel->index(listModel->stringList().indexOf(key), 0);
-        ui->listView->setCurrentIndex(keyIndex);
+        QModelIndex keyIndex = keyList_->index(keyList_->stringList().indexOf(key), 0);
+        ui_->listView->setCurrentIndex(keyIndex);
     }
-    ui->valueEdit->document()->setPlainText(value);
+    ui_->valueEdit->document()->setPlainText(value);
 
-    rowsLabel->setText(QString::number(listModel->stringList().count()) + " keys");
+    rowsLabel_->setText(QString::number(keyList_->stringList().count()) + " keys");
 }
 
 void MainWindow::on_saveButton_clicked()
 {
-    if (!ui->nameEdit->text().isEmpty())
-        store.put(ui->nameEdit->text(), ui->valueEdit->document()->toPlainText(), QDateTime::currentMSecsSinceEpoch() / 1000);
+    if (!ui_->nameEdit->text().isEmpty())
+        store_.put(ui_->nameEdit->text(), ui_->valueEdit->document()->toPlainText(), QDateTime::currentMSecsSinceEpoch() / 1000);
 }
 
 void MainWindow::on_deleteButton_clicked()
 {
-    int row = ui->listView->currentIndex().row();
+    int row = ui_->listView->currentIndex().row();
 
     if (row < 0) {
         statusBar()->showMessage("No key selected");
         return;
     }
 
-    QString selected_key = listModel->stringList().at(row);
-    store.remove(selected_key);
-    ui->nameEdit->setText("");
-    ui->valueEdit->document()->setPlainText("");
+    QString selected_key = keyList_->stringList().at(row);
+    store_.remove(selected_key);
+    ui_->nameEdit->setText("");
+    ui_->valueEdit->document()->setPlainText("");
 }
 
 void MainWindow::on_listView_clicked(const QModelIndex &index)
 {
-    QString selected_key = listModel->stringList().at(index.row());
-    ui->nameEdit->setText(selected_key);
-    ui->valueEdit->document()->setPlainText(store.get(selected_key));
+    QString selected_key = keyList_->stringList().at(index.row());
+    ui_->nameEdit->setText(selected_key);
+    ui_->valueEdit->document()->setPlainText(store_.get(selected_key));
 }
 
 void MainWindow::on_nameEdit_textChanged(const QString &arg1 __attribute__((unused)))
 {
-    refresh_data(store);
+    refresh_data(store_);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {

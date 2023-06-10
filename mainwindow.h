@@ -45,7 +45,7 @@ public slots:
 
     bool maybe_save();
 protected:
-    void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent *event) override;
 
 private slots:
     void on_saveButton_clicked();
@@ -57,20 +57,20 @@ private slots:
     void on_nameEdit_textChanged(const QString &arg1);
 
 private:
-    Ui::MainWindow *ui;
-    Cypher *cypher = NULL;
-    Store store;
+    Ui::MainWindow *ui_;
+    Cypher *cypher_ = NULL;
+    Store store_;
     void createMenu();
     void createStatusBar();
     Cypher * mk_file_cypher(QFileDialog::FileMode mode);
 
-    QMenuBar *menuBar;
-    QMenu *fileMenu;
-    QAction *exitAction, *openAction, *saveAction;
+    QMenuBar *menuBar_;
+    QMenu *fileMenu_;
+    QAction *exitAction_, *openAction_, *saveAction_;
 
-    QLabel *rowsLabel;
+    QLabel *rowsLabel_;
 
-    QStringListModel *listModel;
+    QStringListModel *keyList_;
 };
 
 #endif // MAINWINDOW_H
